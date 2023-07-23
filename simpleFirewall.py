@@ -15,11 +15,11 @@ def clear_firewall_rules(net):
 def create_topology():
     net = Mininet(controller=Controller, switch=OVSSwitch, link=TCLink)
 
-    # Adding the controller
+    # Adding the controller and connecting it to all switches
     controller = net.addController('c0')
 
     # Adding switches
-    switches = [net.addSwitch('s{}'.format(i)) for i in range(1, 6)]
+    switches = [net.addSwitch('s{}'.format(i), controller=controller) for i in range(1, 6)]
 
     # Adding hosts
     hosts = [net.addHost('h{}'.format(i)) for i in range(1, 11)]
@@ -38,6 +38,10 @@ def create_topology():
 
     # Adding the firewall rule to block communication between host1 and host2
     create_firewall(net, hosts[0], hosts[1])
+
+    # Adding a rule to avoid dropping packets due to the firewall
+    for host in net.hosts:
+        host.cmd('ip route add 0.0.0.0/0 via 10.0.0.254')  # Assuming 10.0.0.254 is the IP of the gateway
 
     # Running CLI
     net.interact()
