@@ -1,5 +1,5 @@
 from mininet.net import Mininet
-from mininet.node import Controller, OVSKernelSwitch, Host
+from mininet.node import Controller, OVSSwitch, Host
 from mininet.link import TCLink
 
 def create_firewall(net, host1, host2):
@@ -13,9 +13,9 @@ def clear_firewall_rules(net):
         host.cmd('iptables -F')
 
 def create_topology():
-    net = Mininet(controller=Controller, switch=OVSKernelSwitch, link=TCLink)
+    net = Mininet(controller=Controller, switch=OVSSwitch, link=TCLink)
 
-    # Adding the controller and connecting it to all switches
+    # Adding the controller
     controller = net.addController('c0')
 
     # Adding switches
@@ -32,10 +32,6 @@ def create_topology():
     # Linking switches together
     for i in range(4):
         net.addLink(switches[i], switches[i + 1])
-
-    # Connecting switches to the controller
-    for switch in switches:
-        net.addLink(switch, controller)
 
     # Starting the network
     net.start()
