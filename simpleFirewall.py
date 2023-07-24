@@ -7,17 +7,69 @@ from mininet.link import TCLink
 
 def prompt_firewall():
     while True:
-        response = input("Do you want to disable the firewall or exit the loop? (yes/no/exit): ").strip().lower()
+        print("Options:")
+        print("1. Enable Firewall")
+        print("2. Disable Firewall")
+        print("3. Send Message")
+        print("4. Exit Loop")
 
-        if response in {'yes', 'y'}:
-            disable_firewall(net)
-        elif response in {'no', 'n'}:
-            print("Firewall activated.")
-            activate_firewall(net)
-        elif response in {'exit'}:
+        response = input("Enter the option number: ").strip().lower()
+
+        if   response == '1':
+                activate_firewall(net)
+
+        elif response == '2':
+                disable_firewall(net)
+
+        elif response == '3':
+                send_message()
+
+        elif response == '4':
+            print("Exiting the loop.")
             break
         else:
-            print("Invalid input. Please enter 'yes', 'no', or 'exit'.")
+            print("Invalid input. Please enter a valid option number (1, 2, 3, or 4).")
+
+def send_message():
+    while True:
+        protocol        = input("Enter the protocol (TCP or UDP): ").strip().lower()
+        host_origin     = input("Enter the source host: ").strip().lower()
+        host_destiny    = input("Enter the destination host: ").strip().lower()
+
+        if protocol not in {'tcp', 'udp'}:
+            print("Invalid protocol. Please enter either 'tcp' or 'udp'.")
+            continue
+
+        elif host_origin not in [host.name for host in net.hosts]:
+            print("Invalid source host. Please enter a valid host name.")
+            continue
+
+        elif host_destiny not in [host.name for host in net.hosts]:
+            print("Invalid destination host. Please enter a valid host name.")
+            continue
+
+        elif host_origin == host_destiny:
+            print("Source host cannot be the same as destination host.")
+            continue
+
+        host_origin  = [host for host in net.hosts if host.name == host_origin][0]
+        host_destiny = [host for host in net.hosts if host.name == host_destiny][0]
+        
+        if protocol == 'tcp':
+            # Open an xterm window for the TCP server on the destination host
+            host_destiny.cmd('xterm -hold -title "TCP Server" -e "bash -c \'python -c \"import os; os.system(\\\"python -m http.server 5000\\\")\"\'" &')
+            time.sleep(1)  # Wait for the server to start
+            # Send the TCP message from the origin host to the destination host using nc
+            host_origin.cmd('echo "TCP Test Message" | nc -w 2 {} 5000'.format(host_destiny.IP()))
+            print("TCP message was sent")
+            break
+
+        elif protocol == 'udp':
+            host_origin.cmd('xterm -hold -title "UDP Server" -e "bash -c \'python -c \"import os; os.system(\\\"nc -lu -p 5000\\\")\"\'" &')
+            time.sleep(1)  # Wait for the server to start
+            host_origin.cmd('xterm -hold -title "Send UDP Message" -e "bash -c \'echo Sending UDP message from {} to {}. Press Ctrl+C to exit.; echo \'UDP Test Message\' | nc -u -w 2 {} 5000; bash\'" &'.format(host_origin.name, host_destiny.name, host_destiny.IP()))
+            print("UDP message was sent")
+            break
 
 def disable_firewall(net):
     clear_firewall_rules(net)
@@ -52,7 +104,6 @@ def allow_communication(host1, host2):
     # Removing firewall rule to allow communication between host1 and host2
     host1.cmd('iptables -D OUTPUT -d {} -j DROP'.format(host2.IP()))
     host2.cmd('iptables -D OUTPUT -d {} -j DROP'.format(host1.IP()))
-
 
 def block_protocol(host1, host2, protocol):
     # Adding firewall rule to block communication between host1 and host2
