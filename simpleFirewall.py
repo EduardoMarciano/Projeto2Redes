@@ -1,3 +1,6 @@
+import select
+import errno
+import time
 from mininet.net import Mininet
 from mininet.node import Controller, OVSSwitch, Host
 from mininet.link import TCLink
@@ -64,36 +67,25 @@ if __name__ == '__main__':
         host.cmd('ip route add 0.0.0.0/0 via 10.0.0.254')
 
     #Inicio de experimentos e simulações na rede
-    print("Todos os Hosts possuem conectividade entre si.\n")
+    print()
+    print("Todos os Hosts possuem conectividade entre si. \n")
     net.pingAll()
 
     block_communication(hosts[0], hosts[1])
-    print("Host 1 e Host 2 pararam de se comunicar após inserção do bloqueio do firewall.\n")
+    print()
+    print("Host 1 e Host 2 pararam de se comunicar após inserção do bloqueio do firewall \n")
     net.pingAll()
 
     allow_communication(hosts[0], hosts[1])
-    print("Host 1 e Host 2 voltam a se comunicar ao se retirar o bloqueio.\n")
+    print()
+    print("Host 1 e Host 2 voltam a se comunicar ao se retirar o bloqueio. \n")
     net.pingAll()
 
-    print("Bloqueio das conecções UDP em toda a rede.\n")
-    drop_udp_connection(net)
-    
-    
-    for i in range(1, 10, 2):
-        next_host = (i + 2) if i < 9 else 1  # Próximo host (o último host envia para o primeiro)
-        send_udp_message(net.get('h{}'.format(i)), net.get('h{}'.format(next_host)), "Mensagem UDP de {} para {}".format(i, next_host))
-        received_message = receive_udp_message(net.get('h{}'.format(next_host)))
-        print("Mensagem UDP recebida no host {}: {}".format(next_host, received_message.strip()))
-
-    # Enviar mensagens TCP entre hosts pares
-    for i in range(2, 10, 2):
-        next_host = (i + 2) if i < 8 else 1  # Próximo host (o penúltimo host envia para o primeiro)
-        send_tcp_message(net.get('h{}'.format(i)), net.get('h{}'.format(next_host)), "Mensagem TCP de {} para {}".format(i, next_host))
-        received_message = receive_tcp_message(net.get('h{}'.format(next_host)))
-        print("Mensagem TCP recebida no host {}: {}".format(next_host, received_message.strip()))
+    print()
+    print("Bloqueio das conecções UDP em toda a rede. \n")
 
     # Running CLI
     net.interact()
-
-    net.stop()
     clear_firewall_rules(net)
+    
+    net.stop()
