@@ -2,13 +2,21 @@ from mininet.net import Mininet
 from mininet.node import Controller, OVSSwitch, Host
 from mininet.link import TCLink
 
-def create_firewall(net, host1, host2):
-    # Adding firewall rule to block communication between host1 and host2
+def create_firewall(net, host1, host2, host3, host4, host5, host6):
+    #Blocking communication (h1 and h2)
     host1.cmd('iptables -A OUTPUT -d {} -j DROP'.format(host2.IP()))
     host2.cmd('iptables -A OUTPUT -d {} -j DROP'.format(host1.IP()))
 
+    #Blocking udp (h3 and h4)
+    host3.cmd('iptables -A OUTPUT -p udp -d {} -j DROP'.format(host4.IP()))
+    host4.cmd('iptables -A OUTPUT -p udp -d {} -j DROP'.format(host3.IP()))
+
+    #Blocking tcp (h5 and h6)
+    host5.cmd('iptables -A OUTPUT -p tcp -d {} -j DROP'.format(host6.IP()))
+    host6.cmd('iptables -A OUTPUT -p tcp -d {} -j DROP'.format(host5.IP()))
+    
 def clear_firewall_rules(net):
-    # Clearing all firewall rules on each host
+    # Clear firewall rules
     for host in net.hosts:
         host.cmd('iptables -F')
 
@@ -37,9 +45,9 @@ def create_topology():
     net.start()
 
     # Adding the firewall rule to block communication between host1 and host2
-    create_firewall(net, hosts[0], hosts[1])
+    create_firewall(net, hosts[0], hosts[1], hosts[2], hosts[3], hosts[4], hosts[5])
 
-    # Adding a rule to avoid dropping packets due to the firewall
+    Adding a rule to avoid dropping packets due to the firewall
     for host in net.hosts:
         host.cmd('ip route add 0.0.0.0/0 via 10.0.0.254')  # Assuming 10.0.0.254 is the IP of the gateway
 
