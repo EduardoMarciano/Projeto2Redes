@@ -9,26 +9,106 @@ def prompt_firewall():
         print("1. Enable Firewall")
         print("2. Disable Firewall")
         print("3. Send Message")
-        print("4. Exit Loop")
+        print("4. Block Connection between two hosts")
+        print("5. Unblock Connection between two hosts")
+        print("6. Exit Loop")
 
         response = input("Enter the option number: ").strip().lower()
 
-        if   response == '1':
-                activate_firewall(net)
+        if response == '1':
+            activate_firewall(net)
 
         elif response == '2':
-                disable_firewall(net)
+            disable_firewall(net)
 
         elif response == '3':
-                send_message()
+            send_message()
 
         elif response == '4':
+            block_connection()
+
+        elif response == '5':
+            allow_connection()
+
+        elif response == '6':
             print("Exiting the loop.")
             break
         else:
-            print("Invalid input. Please enter a valid option number (1, 2, 3, or 4).")
+            print("Invalid input. Please enter a valid option number (1, 2, 3, 4, 5, or 6).")
 
-import time
+def block_connection():
+    while True:
+        host1_name = input("Enter the name of the first host: ").strip().lower()
+        host2_name = input("Enter the name of the second host: ").strip().lower()
+
+        if host1_name not in [host.name for host in net.hosts] or host2_name not in [host.name for host in net.hosts]:
+            print("Invalid host names. Please enter valid host names.")
+            continue
+
+        elif host1_name == host2_name:
+            print("The two hosts cannot be the same.")
+            continue
+
+        host1 = [host for host in net.hosts if host.name == host1_name][0]
+        host2 = [host for host in net.hosts if host.name == host2_name][0]
+
+        block_protocol_option = input("Enter the protocol to block (TCP, UDP, or both): ").strip().lower()
+
+        if block_protocol_option == 'tcp':
+            block_protocol(host1, host2, 'tcp')
+            print(f"Blocked TCP communication between {host1_name} and {host2_name}.")
+            break
+        elif block_protocol_option == 'udp':
+            block_protocol(host1, host2, 'udp')
+            print(f"Blocked UDP communication between {host1_name} and {host2_name}.")
+            break
+        elif block_protocol_option == 'both':
+            block_communication(host1, host2)
+            print(f"Blocked both TCP and UDP communication between {host1_name} and {host2_name}.")
+            break
+        else:
+            print("Invalid protocol option. Please enter 'TCP', 'UDP', or 'both'.")
+
+def allow_connection():
+    while True:
+        host1 = input("Enter the name of the first host: ").strip().lower()
+        host2 = input("Enter the name of the second host: ").strip().lower()
+
+        if host1 not in [host.name for host in net.hosts] or host2 not in [host.name for host in net.hosts]:
+            print("Invalid host names. Please enter valid host names.")
+            continue
+
+        elif host1 == host2:
+            print("The two hosts cannot be the same.")
+            continue
+        
+        host1 = [host for host in net.hosts if host.name == host1][0]
+        host2 = [host for host in net.hosts if host.name == host2][0]
+        
+        protocol = input("Enter the protocol to unblock (TCP, UDP, or both): ").strip().lower()
+
+        if protocol == 'tcp':
+
+            allow_protocol(host1, host2, protocol)
+            print(f"Unblocked TCP communication between {host1} and {host2}.")
+
+            break
+
+        elif protocol == 'udp':
+
+            allow_protocol(host1, host2, protocol)
+            print(f"Unblocked UDP communication between {host1} and {host2}.")
+
+            break
+
+        elif protocol == 'both':
+
+            allow_communication(host1, host2)
+            print(f"Unblocked both TCP and UDP communication between {host1} and {host2}.")
+
+            break
+        else:
+            print("Invalid protocol option. Please enter 'TCP', 'UDP', or 'both'.")
 
 def send_message():
     while True:
@@ -68,7 +148,7 @@ def send_message():
             host_origin.cmd('xterm -hold -e "iperf -c {} -u -b 1m -n 1000" &'.format(host_destiny.IP()))
             print("UDP message was sent")
             break
-        
+
 def disable_firewall(net):
     clear_firewall_rules(net)
     
@@ -85,13 +165,6 @@ def activate_firewall(net):
     
     print("Firewall rules have been activated.")
     net.pingAll()
-
-def drop_udp_connection(net):
-    for host1 in net.hosts:
-        for host2 in net.hosts:
-            if host1 != host2:
-                host1.cmd('iptables -A OUTPUT -p udp -d {} -j DROP'.format(host2.IP()))
-
 
 def block_communication(host1, host2):
     # Adding firewall rule to block communication between host1 and host2
