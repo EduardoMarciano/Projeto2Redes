@@ -93,7 +93,7 @@ if __name__ == '__main__':
     print("Bloqueio algumas conecções. \n")
     
     # Blocking communication (h1 and h2)
-    block(host1, host2, 'tcp')
+    block_communication(hosts[0], hosts[1])
 
     # Blocking udp (h3 and h4)
     block(host3, host4, 'udp')
