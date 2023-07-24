@@ -14,6 +14,7 @@ def prompt_firewall():
         print("6. Pingall")
         print("7. Exit Loop")
 
+
         response = input("Enter the option number: ").strip().lower()
 
         if response == '1':
@@ -155,9 +156,7 @@ def send_message():
 
 def disable_firewall(net):
     clear_firewall_rules(net)
-    
     print("Firewall rules have been cleared.")
-    
 
 def activate_firewall(net):
     print("Blocking communication between H1 and H2.")
@@ -168,7 +167,6 @@ def activate_firewall(net):
     block_protocol(hosts[4], hosts[5], 'tcp')
     
     print("Firewall rules have been activated.")
-    #net.pingAll()
 
 def block_communication(host1, host2):
     # Adding firewall rule to block communication between host1 and host2
