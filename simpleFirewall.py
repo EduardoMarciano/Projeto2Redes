@@ -6,14 +6,13 @@ from mininet.link import TCLink
 def prompt_firewall():
     while True:
         print("Options:")
-        print("1. Enable Firewall")
-        print("2. Disable Firewall")
+        print("1. Enable Standard Firewall")
+        print("2. Disable All Firewall")
         print("3. Send Message")
         print("4. Block Connection between two hosts")
         print("5. Unblock Connection between two hosts")
         print("6. Pingall")
         print("7. Exit Loop")
-
 
         response = input("Enter the option number: ").strip().lower()
 
@@ -243,17 +242,6 @@ if __name__ == '__main__':
     print()
     print("Host 1 and Host 2 resume communication after removing the firewall block.\n")
     net.pingAll()
-    
-    print()
-    print("Blocking communication between H1 and H2.\n")
-    # Blocking communication (h1 and h2)
-    block_communication(hosts[0], hosts[1])
-    print("Blocking UDP communication between H3 and H4.\n")
-    # Blocking udp (h3 and h4)
-    block_protocol(hosts[2], hosts[3], 'udp')
-    print("Blocking TCP communication between H5 and H6.\n")
-    # Blocking tcp (h5 and h6)
-    block_protocol(hosts[4], hosts[5], 'tcp')
     
     # Enter a loop that asks to disable or activate the firewall
     prompt_firewall()
