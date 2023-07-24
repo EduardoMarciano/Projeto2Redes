@@ -1,5 +1,3 @@
-import select
-import errno
 import time
 from mininet.net import Mininet
 from mininet.node import Controller, OVSSwitch, Host
@@ -32,9 +30,9 @@ def prompt_firewall():
 
 def send_message():
     while True:
-        protocol        = input("Enter the protocol (TCP or UDP): ").strip().lower()
-        host_origin     = input("Enter the source host: ").strip().lower()
-        host_destiny    = input("Enter the destination host: ").strip().lower()
+        protocol = input("Enter the protocol (TCP or UDP): ").strip().lower()
+        host_origin = input("Enter the source host: ").strip().lower()
+        host_destiny = input("Enter the destination host: ").strip().lower()
 
         if protocol not in {'tcp', 'udp'}:
             print("Invalid protocol. Please enter either 'tcp' or 'udp'.")
@@ -49,25 +47,23 @@ def send_message():
             continue
 
         elif host_origin == host_destiny:
-            print("Source host cannot be the same as destination host.")
+            print("Source host cannot be the same as the destination host.")
             continue
 
-        host_origin  = [host for host in net.hosts if host.name == host_origin][0]
+        host_origin = [host for host in net.hosts if host.name == host_origin][0]
         host_destiny = [host for host in net.hosts if host.name == host_destiny][0]
-        
+
         if protocol == 'tcp':
-            # Open an xterm window for the TCP server on the destination host
-            host_destiny.cmd('xterm -hold -title "TCP Server" -e "bash -c \'python -c \"import os; os.system(\\\"python -m http.server 5000\\\")\"\'" &')
-            time.sleep(1)  # Wait for the server to start
-            # Send the TCP message from the origin host to the destination host using nc
-            host_origin.cmd('echo "TCP Test Message" | nc -w 2 {} 5000'.format(host_destiny.IP()))
+            host_destiny.cmd('xterm -hold -e "iperf -s -i 1" &')
+            time.sleep(1)
+            host_origin.cmd('xterm -hold -e "iperf -c {} -b 1m -n 1000" &'.format(host_destiny.IP()))
             print("TCP message was sent")
             break
 
         elif protocol == 'udp':
-            host_origin.cmd('xterm -hold -title "UDP Server" -e "bash -c \'python -c \"import os; os.system(\\\"nc -lu -p 5000\\\")\"\'" &')
-            time.sleep(1)  # Wait for the server to start
-            host_origin.cmd('xterm -hold -title "Send UDP Message" -e "bash -c \'echo Sending UDP message from {} to {}. Press Ctrl+C to exit.; echo \'UDP Test Message\' | nc -u -w 2 {} 5000; bash\'" &'.format(host_origin.name, host_destiny.name, host_destiny.IP()))
+            host_destiny.cmd('xterm -hold -e "iperf -s -u -i 1" &')
+            time.sleep(1)
+            host_origin.cmd('xterm -hold -e "iperf -c {} -u -b 1m -n 1000" &'.format(host_destiny.IP()))
             print("UDP message was sent")
             break
 
@@ -163,7 +159,7 @@ if __name__ == '__main__':
     
     print()
     print("Host 1 and Host 2 stopped communicating after the firewall block.\n")
-    net.pingAll()
+    #net.pingAll()
     
     allow_communication(hosts[0], hosts[1])
     
