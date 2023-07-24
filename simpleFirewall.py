@@ -96,10 +96,10 @@ if __name__ == '__main__':
     block_communication(hosts[0], hosts[1])
 
     # Blocking udp (h3 and h4)
-    block(host3, host4, 'udp')
+    blockProtocolo(hosts[2], hosts[3], 'udp')
 
     # Blocking tcp (h5 and h6)
-    block(host5, host6, 'tcp')
+    blockProtocolo(hosts[4], hosts[5], 'tcp')
 
     # Running CLI
     net.interact()
