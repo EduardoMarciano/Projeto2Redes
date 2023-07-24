@@ -90,9 +90,16 @@ if __name__ == '__main__':
     net.pingAll()
     
     print()
-    print("Bloqueio das conecções UDP em toda a rede. \n")
+    print("Bloqueio algumas conecções. \n")
     
-    drop_udp_connection(net)
+    # Blocking communication (h1 and h2)
+    block(host1, host2, 'tcp')
+
+    # Blocking udp (h3 and h4)
+    block(host3, host4, 'udp')
+
+    # Blocking tcp (h5 and h6)
+    block(host5, host6, 'tcp')
 
     # Running CLI
     net.interact()
