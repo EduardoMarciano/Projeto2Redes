@@ -1,6 +1,27 @@
+import select
+import errno
+import time
 from mininet.net import Mininet
 from mininet.node import Controller, OVSSwitch, Host
 from mininet.link import TCLink
+
+
+def drop_udp_connection(net):
+    for host1 in net.hosts:
+        for host2 in net.hosts:
+            if host1 != host2:
+                host1.cmd('iptables -A OUTPUT -p udp -d {} -j DROP'.format(host2.IP()))
+
+def block_communication(host1, host2):
+    # Adding firewall rule to block communication between host1 and host2
+    host1.cmd('iptables -A OUTPUT -d {} -j DROP'.format(host2.IP()))
+    host2.cmd('iptables -A OUTPUT -d {} -j DROP'.format(host1.IP()))
+
+def allow_communication(host1, host2):
+    # Removing firewall rule to allow communication between host1 and host2
+    host1.cmd('iptables -D OUTPUT -d {} -j DROP'.format(host2.IP()))
+    host2.cmd('iptables -D OUTPUT -d {} -j DROP'.format(host1.IP()))
+
 
 def create_firewall(net, host1, host2, host3, host4, host5, host6):
     #Blocking communication (h1 and h2)
@@ -15,23 +36,13 @@ def create_firewall(net, host1, host2, host3, host4, host5, host6):
     host5.cmd('iptables -A OUTPUT -p tcp -d {} -j DROP'.format(host6.IP()))
     host6.cmd('iptables -A OUTPUT -p tcp -d {} -j DROP'.format(host5.IP()))
     
+    
 def clear_firewall_rules(net):
     # Clear firewall rules
     for host in net.hosts:
         host.cmd('iptables -F')
 
-def create_topology():
-    net = Mininet(controller=Controller, switch=OVSSwitch, link=TCLink)
-
-    # Adding the controller and connecting it to all switches
-    controller = net.addController('c0')
-
-    # Adding switches
-    switches = [net.addSwitch('s{}'.format(i), controller=controller) for i in range(1, 6)]
-
-    # Adding hosts
-    hosts = [net.addHost('h{}'.format(i)) for i in range(1, 11)]
-
+def create_topology(net, controller, switches, hosts):
     # Linking switches to hosts
     for i in range(0, 10, 2):
         net.addLink(switches[i // 2], hosts[i])
@@ -41,22 +52,47 @@ def create_topology():
     for i in range(4):
         net.addLink(switches[i], switches[i + 1])
 
+if __name__ == '__main__':
+    net = Mininet(controller=Controller, switch=OVSSwitch, link=TCLink)
+    
+    controller = net.addController('c0')
+    switches = [net.addSwitch('s{}'.format(i), controller=controller) for i in range(1, 6)]
+    hosts = [net.addHost('h{}'.format(i)) for i in range(1, 11)]
+    
+    create_topology(net, controller, switches, hosts)
+
     # Starting the network
     net.start()
+
 
     # Adding the firewall rule to block communication between host1 and host2
     create_firewall(net, hosts[0], hosts[1], hosts[2], hosts[3], hosts[4], hosts[5])
 
     #Adding a rule to avoid dropping packets due to the firewall
+    
     for host in net.hosts:
-        host.cmd('ip route add 0.0.0.0/0 via 10.0.0.254')  # Assuming 10.0.0.254 is the IP of the gateway
+        host.cmd('ip route add 0.0.0.0/0 via 10.0.0.254')
+
+    #Inicio de experimentos e simulações na rede
+    print()
+    print("Todos os Hosts possuem conectividade entre si. \n")
+    net.pingAll()
+
+    block_communication(hosts[0], hosts[1])
+    print()
+    print("Host 1 e Host 2 pararam de se comunicar após inserção do bloqueio do firewall \n")
+    net.pingAll()
+
+    allow_communication(hosts[0], hosts[1])
+    print()
+    print("Host 1 e Host 2 voltam a se comunicar ao se retirar o bloqueio. \n")
+    net.pingAll()
+
+    print()
+    print("Bloqueio das conecções UDP em toda a rede. \n")
 
     # Running CLI
     net.interact()
-
-    # Stopping the network and cleaning up
-    net.stop()
     clear_firewall_rules(net)
-
-if __name__ == '__main__':
-    create_topology()
+    
+    net.stop()
