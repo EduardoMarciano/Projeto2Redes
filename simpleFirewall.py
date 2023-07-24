@@ -5,6 +5,37 @@ from mininet.net import Mininet
 from mininet.node import Controller, OVSSwitch, Host
 from mininet.link import TCLink
 
+def prompt_firewall():
+    while True:
+        response = input("Do you want to disable the firewall or exit the loop? (yes/no/exit): ").strip().lower()
+
+        if response in {'yes', 'y'}:
+            disable_firewall(net)
+        elif response in {'no', 'n'}:
+            print("Firewall activated.")
+            activate_firewall(net)
+        elif response in {'exit'}:
+            break
+        else:
+            print("Invalid input. Please enter 'yes', 'no', or 'exit'.")
+
+def disable_firewall(net):
+    clear_firewall_rules(net)
+    
+    print("Firewall rules have been cleared.")
+    net.pingAll()
+
+def activate_firewall(net):
+    print("Blocking communication between H1 and H2.")
+    print("Blocking UDP communication between H3 and H4.")
+    print("Blocking TCP communication between H5 and H6.")
+    block_communication(hosts[0], hosts[1])
+    block_protocol(hosts[2], hosts[3], 'udp')
+    block_protocol(hosts[4], hosts[5], 'tcp')
+    
+    print("Firewall rules have been activated.")
+    net.pingAll()
+
 def drop_udp_connection(net):
     for host1 in net.hosts:
         for host2 in net.hosts:
@@ -23,7 +54,7 @@ def allow_communication(host1, host2):
     host2.cmd('iptables -D OUTPUT -d {} -j DROP'.format(host1.IP()))
 
 
-def blockProtocolo(host1, host2, protocol):
+def block_protocol(host1, host2, protocol):
     # Adding firewall rule to block communication between host1 and host2
     if protocol == 'tcp':
         host1.cmd('iptables -A OUTPUT -p tcp -d {} -j DROP'.format(host2.IP()))
@@ -32,7 +63,7 @@ def blockProtocolo(host1, host2, protocol):
         host1.cmd('iptables -A OUTPUT -p udp -d {} -j DROP'.format(host2.IP()))
         host2.cmd('iptables -A OUTPUT -p udp -d {} -j DROP'.format(host1.IP()))
 
-def allowProtocolo(host1, host2, protocol):
+def allow_protocol(host1, host2, protocol):
     # Removing firewall rule to allow communication between host1 and host2
     if protocol == 'tcp':
         host1.cmd('iptables -D OUTPUT -p tcp -d {} -j DROP'.format(host2.IP()))
@@ -72,35 +103,37 @@ if __name__ == '__main__':
     for host in net.hosts:
         host.cmd('ip route add 0.0.0.0/0 via 10.0.0.254')
 
-    # Inicio de experimentos e simulacoes na rede
+    # Start of experiments and simulations in the network
     print()
-    print("Todos os Hosts possuem conectividade entre si. \n")
+    print("All Hosts have connectivity with each other.\n")
     net.pingAll()
     
     block_communication(hosts[0], hosts[1])
     
     print()
-    print("Host 1 e Host 2 pararam de se comunicar após inserção do bloqueio do firewall \n")
+    print("Host 1 and Host 2 stopped communicating after the firewall block.\n")
     net.pingAll()
     
     allow_communication(hosts[0], hosts[1])
     
     print()
-    print("Host 1 e Host 2 voltam a se comunicar ao se retirar o bloqueio. \n")
+    print("Host 1 and Host 2 resume communication after removing the firewall block.\n")
     net.pingAll()
     
     print()
-    print("Bloqueio algumas conecções. \n")
-    
+    print("Blocking communication between H1 and H2.\n")
     # Blocking communication (h1 and h2)
     block_communication(hosts[0], hosts[1])
-
+    print("Blocking UDP communication between H3 and H4.\n")
     # Blocking udp (h3 and h4)
-    blockProtocolo(hosts[2], hosts[3], 'udp')
-
+    block_protocol(hosts[2], hosts[3], 'udp')
+    print("Blocking TCP communication between H5 and H6.\n")
     # Blocking tcp (h5 and h6)
-    blockProtocolo(hosts[4], hosts[5], 'tcp')
-
+    block_protocol(hosts[4], hosts[5], 'tcp')
+    
+    # Enter a loop that asks to disable or activate the firewall
+    prompt_firewall()
+    
     # Running CLI
     net.interact()
 
