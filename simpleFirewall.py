@@ -47,7 +47,7 @@ def create_topology():
     # Adding the firewall rule to block communication between host1 and host2
     create_firewall(net, hosts[0], hosts[1], hosts[2], hosts[3], hosts[4], hosts[5])
 
-    Adding a rule to avoid dropping packets due to the firewall
+    #Adding a rule to avoid dropping packets due to the firewall
     for host in net.hosts:
         host.cmd('ip route add 0.0.0.0/0 via 10.0.0.254')  # Assuming 10.0.0.254 is the IP of the gateway
 
