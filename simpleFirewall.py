@@ -26,20 +26,6 @@ def clear_firewall_rules(net):
     for host in net.hosts:
         host.cmd('iptables -F')
 
-def send_tcp_message(sender, receiver, message):
-    receiver.cmd('nc -l -p 12345 > /tmp/message &')
-    sender.cmd('echo "{}" | nc {} 12345'.format(message, receiver.IP()))
-
-def receive_tcp_message(receiver):
-    return receiver.cmd('cat /tmp/message')
-
-def send_udp_message(sender, receiver, message):
-    receiver.cmd('nc -u -l -p 12345 > /tmp/message &')
-    sender.cmd('echo "{}" | nc -u {} 12345'.format(message, receiver.IP()))
-
-def receive_udp_message(receiver):
-    return receiver.cmd('cat /tmp/message')
-
 def create_topology(net, controller, switches, hosts):
     # Linking switches to hosts
     for i in range(0, 10, 2):
