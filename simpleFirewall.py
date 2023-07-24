@@ -28,6 +28,8 @@ def prompt_firewall():
         else:
             print("Invalid input. Please enter a valid option number (1, 2, 3, or 4).")
 
+import time
+
 def send_message():
     while True:
         protocol = input("Enter the protocol (TCP or UDP): ").strip().lower()
@@ -54,9 +56,9 @@ def send_message():
         host_destiny = [host for host in net.hosts if host.name == host_destiny][0]
 
         if protocol == 'tcp':
-            host_destiny.cmd('xterm -hold -e "iperf -s -i 1" &')
+            host_origin.cmd('xterm -hold -e "iperf -s -i 1" &')
             time.sleep(1)
-            host_origin.cmd('xterm -hold -e "iperf -c {} -b 1m -n 1000" &'.format(host_destiny.IP()))
+            host_destiny.cmd('xterm -hold -e "iperf -c {} -t 10 -i 1" &'.format(host_origin.IP()))
             print("TCP message was sent")
             break
 
@@ -66,7 +68,7 @@ def send_message():
             host_origin.cmd('xterm -hold -e "iperf -c {} -u -b 1m -n 1000" &'.format(host_destiny.IP()))
             print("UDP message was sent")
             break
-
+        
 def disable_firewall(net):
     clear_firewall_rules(net)
     
